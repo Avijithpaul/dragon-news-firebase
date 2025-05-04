@@ -1,9 +1,11 @@
-import React, { useContext } from 'react';
-import { Link } from 'react-router';
+import React, { useContext, useState } from 'react';
+import { Link, useNavigate } from 'react-router';
 import { AuthContext } from '../Provider/AuthProvider';
 
 const Register = () => {
-    const { createUser ,setUser} = useContext(AuthContext)
+    const [nameError, setNameError] = useState("")
+    const { createUser, setUser, updateUser } = useContext(AuthContext)
+    const navigate = useNavigate()
     const handleRegister = (e) => {
         e.preventDefault()
         const form = e.target
@@ -11,15 +13,31 @@ const Register = () => {
         const password = form.password.value
         const photo = form.photo.value
         const name = form.name.value
-        console.log({ email, password, name, photo })
+        if (name.length < 5) {
+            setNameError("Name should be more then 5 character")
+            return
+        }
+        else {
+            setNameError("")
+        }
+        // console.log({ email, password, name, photo })
         createUser(email, password)
             .then(result => {
                 // console.log(result.user)
-                setUser(result.user)
+                const user = result.user
+                updateUser({ displayName: name, photoURL: photo })
+                    .then(() => {
+                        setUser({ ...user, displayName: name, photoURL: photo })
+                        navigate("/")
+                    })
+                    .catch((error) => {
+                        alert(error)
+                        setUser(user)
+                    });
 
             })
             .catch(error => {
-                console.log(error)
+                alert(error)
             })
     }
     return (
@@ -30,16 +48,17 @@ const Register = () => {
                     <form onSubmit={handleRegister} className="fieldset">
                         {/* Name */}
                         <label className="label">Name</label>
-                        <input type="text" name='name' className="input" placeholder="Name" required/>
+                        <input type="text" name='name' className="input" placeholder="Name" required />
+                        {nameError && <p className='text-xs text-error'>{nameError}</p>}
                         {/* Photo url */}
                         <label className="label">Photo url</label>
-                        <input type="text" name='photo' className="input" placeholder="Photo url" required/>
+                        <input type="text" name='photo' className="input" placeholder="Photo url" required />
                         {/* email */}
                         <label className="label">Email</label>
-                        <input type="email" name='email' className="input" placeholder="Email" required/>
+                        <input type="email" name='email' className="input" placeholder="Email" required />
                         {/* password */}
                         <label className="label">Password</label>
-                        <input type="password" name='password' className="input" placeholder="Password" required/>
+                        <input type="password" name='password' className="input" placeholder="Password" required />
 
                         <button type='submit' className="btn btn-neutral mt-4">Register</button>
                         <p className='text-center p-2 font-bold'>
